@@ -22,7 +22,7 @@ export default function LoginPage() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError(''); // Clear previous errors
+        setError(''); 
     
         try {
             const res = await axios.post("http://localhost:8000/login", {
@@ -31,7 +31,10 @@ export default function LoginPage() {
             });
     
             if (res.status === 200) {
-                navigate("/");
+                navigate("/dashboard");
+                const token = res.data.token;
+                localStorage.setItem("token" ,token);
+                localStorage.setItem("_id" ,res.data.user._id)
             }
         } catch (err) {
             if (err.response?.status === 403) {

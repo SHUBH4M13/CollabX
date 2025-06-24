@@ -80,7 +80,7 @@ export default function OTPAuthPage() {
 
             // Navigate to success page or login after successful verification
             if (response.status === 200) {
-                navigate("/login"); // or wherever you want to redirect after successful OTP verification
+                navigate("/signup/success"); // or wherever you want to redirect after successful OTP verification
             }
         } catch (err) {
             if (err.response?.status === 400) {
@@ -223,4 +223,4 @@ export default function OTPAuthPage() {
             </div>
         </div>
     );
-}
+} 
