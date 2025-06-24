@@ -1,26 +1,51 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router';
+import axios from 'axios';
 
 export default function LoginPage() {
     const navigate = useNavigate();
     const [showPassword, setShowPassword] = useState(false);
+    const [error, setError] = useState('');
     const [formData, setFormData] = useState({
         email: '',
         password: ''
     });
 
     const handleInputChange = (e) => {
+        setError(''); 
         setFormData({
             ...formData,
             [e.target.name]: e.target.value
         });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Login submitted:', formData);
+        setError(''); // Clear previous errors
+    
+        try {
+            const res = await axios.post("http://localhost:8000/login", {
+                email: formData.email,
+                password: formData.password
+            });
+    
+            if (res.status === 200) {
+                navigate("/");
+            }
+        } catch (err) {
+            if (err.response?.status === 403) {
+                navigate("/signup/OTP");
+            } else if (err.response?.status === 401) {
+                setError("Wrong password");
+            } else if (err.response?.status === 404) {
+                setError("User not found");
+            } else {
+                setError("An unexpected error occurred. Please try again.");
+            }
+        }
     };
+    
 
     const handleGoogleAuth = () => {
         console.log('Google auth triggered');
@@ -36,6 +61,12 @@ export default function LoginPage() {
                         <h1 className="text-3xl font-bold mb-2">Welcome Back</h1>
                         <p className="text-neutral-400">Sign in to your account to continue</p>
                     </div>
+
+                    {error && (
+                        <div className="mb-4 p-3 bg-red-900/50 border border-red-700 rounded-lg">
+                            <p className="text-red-300 text-sm">{error}</p>
+                        </div>
+                    )}
 
                     <button
                         onClick={handleGoogleAuth}

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
 import { useNavigate } from 'react-router';
+import axios from 'axios';
+import authstore from '../store/authstore';
 
 export default function SignupPage() {
     const navigate = useNavigate();
@@ -22,7 +24,21 @@ export default function SignupPage() {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        console.log('Signup submitted:', formData);
+        axios.post("http://localhost:8000/signup" , {
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            email: formData.email,
+            password: formData.password
+        })
+        .then( response => {
+            authstore.getState().set_emp_id(response.data.emp_id);
+            if( response.status === 201 ){
+                navigate("/signup/OTP")
+            }
+        })
+        .catch(err => {
+            console.log("error :" , err);
+        })
     };
 
     const handleGoogleAuth = () => {

@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router';
+import axios from 'axios';
+import authstore from '../store/authstore';
 
 export default function OTPAuthPage() {
     const navigate = useNavigate();
@@ -27,8 +29,8 @@ export default function OTPAuthPage() {
         setOtp(newOtp);
         setError(''); // Clear error when user types
 
-        // Auto-focus next input
-        if (value && index < 5) {
+        // Auto-focus next input - Fixed: should be index < 3 for 4 inputs
+        if (value && index < 3) {
             inputRefs.current[index + 1]?.focus();
         }
     };
@@ -50,8 +52,8 @@ export default function OTPAuthPage() {
                     if (i < 4) newOtp[i] = digit;
                 });
                 setOtp(newOtp);
-                // Focus the last filled input or next empty one
-                const lastIndex = Math.min(pastedOtp.length, 5);
+                // Focus the last filled input or next empty one - Fixed: should be max 3 for 4 inputs
+                const lastIndex = Math.min(pastedOtp.length, 3);
                 inputRefs.current[lastIndex]?.focus();
             });
         }
@@ -68,18 +70,25 @@ export default function OTPAuthPage() {
 
         setIsLoading(true);
         setError('');
-
+        
         try {
-            // await new Promise(resolve => setTimeout(resolve, 1500));
-            if (otpString === '1234') {
-            navigate('/');
-            } else {
-                setError('Invalid OTP. Please try again.');
-                setOtp(['', '', '', '']);
-                inputRefs.current[0]?.focus();
+            const emp_id = authstore.getState().emp_id; 
+            const response = await axios.post("http://localhost:8000/signup/OTP", {
+                emp_id,
+                otp: otpString, // Fixed: was toString(otp), now properly sends the OTP string
+            });
+
+            // Navigate to success page or login after successful verification
+            if (response.status === 200) {
+                navigate("/login"); // or wherever you want to redirect after successful OTP verification
             }
         } catch (err) {
-            setError('Something went wrong. Please try again.');
+            if (err.response?.status === 400) {
+                setError(err.response.data.error || 'Invalid or expired OTP');
+            } else {
+                setError('Something went wrong. Please try again.');
+            }
+            console.error("OTP error:", err.response?.data || err.message);
         } finally {
             setIsLoading(false);
         }
@@ -93,9 +102,13 @@ export default function OTPAuthPage() {
         setError('');
         
         try {
-            // // Simulate resend API call - replace with your actual API call
-            // await new Promise(resolve => setTimeout(resolve, 1000));
-            // // Add success notification here if needed
+            // You should implement a resend OTP API endpoint
+            const emp_id = authstore.getState().emp_id;
+            const employee = await Employee.findById(emp_id); // This should be an API call
+            await SendGenerateOTP({ mailToBeVerifed: employee.email }); // This should be an API call
+            
+            // Show success message
+            setError(''); // Clear any previous errors
         } catch (err) {
             setError('Failed to resend code. Please try again.');
             setCanResend(true);
