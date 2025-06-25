@@ -1,22 +1,38 @@
 import axios from 'axios';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { GetUser } from './edituser';
 
 export default function EditProfilePage() {
-
-    axios.get()
-
+  // Initialize formData with default values to prevent undefined issues
   const [formData, setFormData] = useState({
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    location: 'San Francisco, CA',
-    website: 'https://johndoe.dev',
-    phone: '+1 (555) 123-4567',
-    dateOfBirth: '1990-01-15',
+    name: '',
+    username: '',
+    email: '',
+    bio: '',
+    phone: '',
+    location: '',
+    dateOfBirth: '',
     profileImage: null
   });
 
-  const [imagePreview, setImagePreview] = useState('https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face');
+  const [imagePreview, setImagePreview] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingData, setIsLoadingData] = useState(true);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        setIsLoadingData(true);
+        await GetUser(setFormData);
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      } finally {
+        setIsLoadingData(false);
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -29,6 +45,18 @@ export default function EditProfilePage() {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Validate file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('File size must be less than 5MB');
+        return;
+      }
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file');
+        return;
+      }
+
       setFormData(prev => ({
         ...prev,
         profileImage: file
@@ -46,35 +74,97 @@ export default function EditProfilePage() {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const token = localStorage.getItem("token");
+      const user_id = localStorage.getItem("_id");
+      
+      if (!token || !user_id) {
+        alert('Authentication required. Please login again.');
+        return;
+      }
+
+      // Create FormData for file upload if needed
+      const submitData = new FormData();
+      
+      // Append form fields - map back to backend field names
+      const backendData = {
+        firstName: formData.name ? formData.name.split(' ')[0] : '',
+        lastName: formData.name ? formData.name.split(' ').slice(1).join(' ') : '',
+        username: formData.username || '',
+        email: formData.email || '',
+        bio: formData.bio || '',
+        phoneNo: formData.phone || '',
+        location: formData.location || '',
+        dob: formData.dateOfBirth || '',
+      };
+
+      // Append regular fields
+      Object.keys(backendData).forEach(key => {
+        submitData.append(key, backendData[key]);
+      });
+
+      // Append profile image if exists
+      if (formData.profileImage) {
+        submitData.append('profileImage', formData.profileImage);
+      }
+
+      // Make API call to update user
+      const response = await axios.put(`http://localhost:8000/user/${user_id}`, submitData, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response.status === 200) {
+        alert('Profile updated successfully!');
+        // Optionally refresh the data
+        await GetUser(setFormData);
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      if (error.response?.status === 401) {
+        alert('Session expired. Please login again.');
+      } else {
+        alert('Failed to update profile. Please try again.');
+      }
+    } finally {
       setIsLoading(false);
-      alert('Profile updated successfully!');
-    }, 1500);
+    }
   };
 
   return (
     <div className="min-h-screen bg-[#0a0a0a]">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        {/* Header */}
-        <div className="animate-fade-in mb-8">
-          <div className="flex items-center gap-4 mb-6">
-            <button 
-              onClick={() => window.history.back()}
-              className="w-10 h-10 rounded-full border border-neutral-700 flex items-center justify-center hover:bg-neutral-800 transition-colors"
-            >
-              <svg className="w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-white">Edit Profile</h1>
-              <p className="text-neutral-400 text-sm md:text-base">Update your personal information and preferences</p>
+        {/* Loading State */}
+        {isLoadingData ? (
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="flex items-center gap-3 text-neutral-400">
+              <div className="w-6 h-6 border-2 border-neutral-600 border-t-orange-500 rounded-full animate-spin"></div>
+              <span>Loading profile data...</span>
             </div>
           </div>
-        </div>
+        ) : (
+          <>
+            {/* Header */}
+            <div className="animate-fade-in mb-8">
+              <div className="flex items-center gap-4 mb-6">
+                <button 
+                  onClick={() => window.history.back()}
+                  className="w-10 h-10 rounded-full border border-neutral-700 flex items-center justify-center hover:bg-neutral-800 transition-colors"
+                >
+                  <svg className="w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <div>
+                  <h1 className="text-2xl md:text-3xl font-bold text-white">Edit Profile</h1>
+                  <p className="text-neutral-400 text-sm md:text-base">Update your personal information and preferences</p>
+                </div>
+              </div>
+            </div>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
+            <form onSubmit={handleSubmit} className="space-y-8">
           {/* Profile Picture Section */}
           <div className="animate-fade-in-delay">
             <div className="bg-neutral-900 border border-neutral-700 rounded-lg p-6 md:p-8">
@@ -98,7 +188,7 @@ export default function EditProfilePage() {
                 </div>
                 <div className="text-center md:text-left">
                   <h3 className="text-white font-medium mb-2">Change Profile Photo</h3>
-                  <p className="text-neutral-400 text-sm mb-4">Upload a new profile picture. JPG, PNG or GIF (max 5MB)</p>
+                  <p className="text-neutral-400 text-sm mb-4">Upload a new profile picture. JPG, PNG(max 5MB)</p>
                   <input
                     id="imageInput"
                     type="file"
@@ -128,7 +218,7 @@ export default function EditProfilePage() {
                   <input
                     type="text"
                     name="name"
-                    value={formData.name}
+                    value={formData.name || ''}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
                     placeholder="Enter your full name"
@@ -139,7 +229,7 @@ export default function EditProfilePage() {
                   <input
                     type="text"
                     name="username"
-                    value={formData.username}
+                    value={formData.username || ''}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
                     placeholder="Enter your username"
@@ -150,7 +240,7 @@ export default function EditProfilePage() {
                   <input
                     type="email"
                     name="email"
-                    value={formData.email}
+                    value={formData.email || ''}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
                     placeholder="Enter your email address"
@@ -160,7 +250,7 @@ export default function EditProfilePage() {
                   <label className="block text-sm font-medium text-neutral-300 mb-2">Bio</label>
                   <textarea
                     name="bio"
-                    value={formData.bio}
+                    value={formData.bio || ''}
                     onChange={handleInputChange}
                     rows={4}
                     className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all resize-none"
@@ -181,7 +271,7 @@ export default function EditProfilePage() {
                   <input
                     type="tel"
                     name="phone"
-                    value={formData.phone}
+                    value={formData.phone || ''}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
                     placeholder="Enter your phone number"
@@ -192,21 +282,10 @@ export default function EditProfilePage() {
                   <input
                     type="text"
                     name="location"
-                    value={formData.location}
+                    value={formData.location || ''}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
                     placeholder="Enter your location"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-neutral-300 mb-2">Website</label>
-                  <input
-                    type="url"
-                    name="website"
-                    value={formData.website}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-                    placeholder="Enter your website URL"
                   />
                 </div>
                 <div>
@@ -214,49 +293,10 @@ export default function EditProfilePage() {
                   <input
                     type="date"
                     name="dateOfBirth"
-                    value={formData.dateOfBirth}
+                    value={formData.dateOfBirth || ''}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
                   />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Privacy Settings */}
-          <div className="animate-fade-in-delay-3">
-            <div className="bg-neutral-900 border border-neutral-700 rounded-lg p-6 md:p-8">
-              <h2 className="text-xl font-semibold text-white mb-6">Privacy Settings</h2>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-white font-medium">Profile Visibility</h3>
-                    <p className="text-neutral-400 text-sm">Make your profile visible to other users</p>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" className="sr-only peer" defaultChecked />
-                    <div className="w-11 h-6 bg-neutral-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-neutral-800 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-neutral-800 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
-                  </label>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-white font-medium">Email Notifications</h3>
-                    <p className="text-neutral-400 text-sm">Receive email notifications for updates</p>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" className="sr-only peer" defaultChecked />
-                    <div className="w-11 h-6 bg-neutral-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-neutral-800 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-neutral-800 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
-                  </label>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-white font-medium">Show Online Status</h3>
-                    <p className="text-neutral-400 text-sm">Let others see when you're online</p>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" className="sr-only peer" />
-                    <div className="w-11 h-6 bg-neutral-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-neutral-800 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-neutral-800 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
-                  </label>
                 </div>
               </div>
             </div>
@@ -288,28 +328,9 @@ export default function EditProfilePage() {
               </button>
             </div>
           </div>
-
-          {/* Danger Zone */}
-          <div className="animate-fade-in-delay-3">
-            <div className="bg-red-950/20 border border-red-800/30 rounded-lg p-6 md:p-8">
-              <h2 className="text-xl font-semibold text-red-400 mb-4">Danger Zone</h2>
-              <div className="space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  <div>
-                    <h3 className="text-white font-medium">Delete Account</h3>
-                    <p className="text-neutral-400 text-sm">Permanently delete your account and all associated data</p>
-                  </div>
-                  <button
-                    type="button"
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors text-sm sm:w-auto"
-                  >
-                    Delete Account
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </form>
+            </form>
+          </>
+        )}
       </div>
     </div>
   );

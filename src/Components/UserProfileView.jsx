@@ -1,26 +1,42 @@
-import { useState } from 'react';
+import { useState , useEffect } from 'react';
+import axios from 'axios';
+import { useParams } from 'react-router';
 
 export default function EmployeeProfileView() {
+  const token = localStorage.getItem("token")
+  const [ employeeData , setemployeeData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phoneNo: '',
+    gender: '',
+    company: '',
+    verified: false,
+    projects: [''],
+    roles: [''],
+  })
+
   const [isFollowing, setIsFollowing] = useState(false);
   const [showMessageModal, setShowMessageModal] = useState(false);
+  const {user_id} = useParams();
+ 
+  useEffect(() => {
+    if (!user_id || !token) return;
+    
+    axios.get(`http://localhost:8000/user/${user_id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+    .then((response) => {
+      console.log(response.data);
+      setemployeeData(response.data); 
+    })
+    .catch((err) => {
+      console.error("Error fetching employee:", err);
+    });
+  }, [user_id, token]);
 
-  // Mock employee data based on the Employee schema
-  const employeeData = {
-    firstName: 'Sarah',
-    lastName: 'Johnson',
-    email: 'sarah.johnson@techcorp.com',
-    phoneNo: '+1 (555) 123-4567',
-    gender: 'female',
-    company: 'TechCorp Solutions',
-    verified: true,
-    projects: ['E-commerce Platform', 'Mobile App Development', 'Data Analytics Dashboard'],
-    roles: ['Manager', 'Employee'],
-    lastSeen: '2 hours ago',
-    joinedDate: 'March 2022',
-    department: 'Engineering',
-    employeeId: 'EMP001',
-    friendsCount: 23
-  };
 
   const handleFollowToggle = () => {
     setIsFollowing(!isFollowing);
@@ -83,9 +99,6 @@ export default function EmployeeProfileView() {
                     alt={`${employeeData.firstName} ${employeeData.lastName}`}
                     className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover border-4 border-orange-500 bg-neutral-800"
                   />
-                  {employeeData.isOnline && (
-                    <div className="absolute bottom-2 right-2 w-4 h-4 md:w-6 md:h-6 bg-green-500 rounded-full border-2 border-neutral-900"></div>
-                  )}
                   {employeeData.verified && (
                     <div className="absolute top-0 right-0 w-6 h-6 bg-orange-500 rounded-full border-2 border-neutral-900 flex items-center justify-center">
                       <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
