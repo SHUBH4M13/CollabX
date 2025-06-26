@@ -1,6 +1,7 @@
 // AppSidebar.jsx
 import { Command } from "lucide-react"
 import { useNavigate } from "react-router"
+import { useState } from "react";
 
 const sidebarData = {
   user: {
@@ -10,28 +11,26 @@ const sidebarData = {
   },
 }
 
+
 export default function AppSidebar({ isCollapsed = false }) {
   const navigate = useNavigate();
   const user_id = localStorage.getItem("_id");
+  const [isActive , setisActive ] = useState(false);
 
   return (
-    <div className={`${isCollapsed ? 'w-16' : 'w-64'} h-screen bg-neutral-950 border-r border-neutral-800 flex flex-col transition-all duration-300 animate-fadeIn`}>
+    <div className={`${isCollapsed ? 'w-16' : 'w-64'} min-h-screen bg-neutral-950 border-r border-neutral-800 flex flex-col transition-all duration-300 animate-fadeIn`}>
 
       {/* Header */}
       <div className="p-4 animate-fadeIn" style={{ animationDelay: '0.3s', animationFillMode: 'both' }}>
         <a
-          href="#"
-          className={` ${isCollapsed ? 'opacity-0' : 'opacity-100'} flex items-center gap-3 p-3 rounded-lg hover:bg-hovercolor transition-colors`}
+          href="/dashboard"
+          className={` ${isCollapsed ? 'opacity-0' : 'opacity-100'} flex justify-center items-center gap-3 p-3 rounded-lg hover:bg-hovercolor transition-colors`}
         >
           <img
-            className="w-10 h-10 object-contain"
-            src="https://images.icon-icons.com/2699/PNG/512/nvidia_logo_icon_169902.png"
+            className="w-40 h-30 object-contain"
+            src="https://religglobal.com/wp-content/uploads/2019/10/relig-solution-1024x379.webp"
             alt="Company Logo"
           />
-          <div className="flex flex-col">
-            <span className="text-sm font-semibold text-white">Company Inc</span>
-            <span className="text-xs text-neutral-400">Enterprise</span>
-          </div>
         </a>
       </div>
 
@@ -42,13 +41,26 @@ export default function AppSidebar({ isCollapsed = false }) {
             <div className="px-3 py-2">
               <h3 className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Manage</h3>
               <ul className="mt-3 ml-3">
+
                 <div>
                   <button 
-                  onClick={ () => {navigate("/dashboard/employees")}}
-                  className=" cursor-pointer w-full pl-3 rounded-md hover:bg-hovercolor h-[30px] text-xs font-medium text-neutral-100 uppercase">
+                  onClick={ () =>
+                  {navigate("/dashboard/employees")}}
+                  className= {` cursor-pointer w-full pl-3 rounded-md hover:bg-primary/85 active:bg-primary/85 h-[30px] text-xs font-medium text-neutral-100 uppercase ${isActive ? 'bg-primary' : '' }`  }>
                     Employees
                   </button>
                 </div>
+                
+                <div>
+                  <button 
+                  onClick={ () =>
+                  {navigate("/dashboard/employees/add")}}
+                  className= {` cursor-pointer w-full pl-3 rounded-md hover:bg-primary/85 active:bg-primary/85 h-[30px] text-xs font-medium text-neutral-100 uppercase ${isActive ? 'bg-primary' : '' }`  }>
+                    Add new Employee
+                  </button>
+                </div>
+                
+
               </ul>
             </div>
           </div>

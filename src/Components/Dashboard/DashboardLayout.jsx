@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import AppSidebar from './AppSidebar'
 import DashboardPage from './RightDashboardPage'
 
-export default function Dashboard() {
+export default function DashboardLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   
   const toggleSidebar = () => {

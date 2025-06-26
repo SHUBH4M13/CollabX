@@ -1,6 +1,6 @@
 import Navbar from "./Navbar"
-import discordphoto from "../assets/discordphoto.png/"
 import { useNavigate } from "react-router"
+import AppSS from "../assets/AppSS.png"
 
 export default function HeroSection() {
 
@@ -29,7 +29,7 @@ export default function HeroSection() {
                     <div className="relative z-10 w-5/6 mt-20 rounded-3xl border border-neutral-800 bg-neutral-900 p-4 shadow-md animate-fade-in-delay-3">
                         <div className="w-full overflow-hidden rounded-xl border border-gray-700">
                             <img
-                                src={discordphoto}
+                                src={AppSS}
                                 alt="Landing page preview"
                                 className="aspect-[16/9] h-auto w-full object-cover"
                                 height={1000}

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
-import { useNavigate } from 'react-router';
+import { Outlet, useNavigate } from 'react-router';
 import axios from 'axios';
-import authstore from '../store/authstore';
+import authstore from '../../store/authstore';
 
 export default function SignupPage() {
     const navigate = useNavigate();
@@ -48,7 +48,7 @@ export default function SignupPage() {
     return (
         <div className="relative flex items-center justify-center min-h-screen bg-black text-white">
             <div className="absolute inset-0 bg-gradient-to-br from-neutral-900 via-black to-neutral-900"></div>
-            
+            <Outlet/>
             <div className="relative z-10 w-full max-w-md mx-4">
                 <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-8 shadow-2xl animate-fade-in">
                     <div className="text-center mb-8">

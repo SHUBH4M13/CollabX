@@ -1,35 +1,79 @@
-import HeroSection from "./Components/HeroSection"
-import LoginPage from "./Components/LoginPage"
-import SignupPage from "./Components/SignupPage"
-import OTPAuthPage from "./Components/OTPAuthPage";
-import VerificationSuccess from "./Components/VerificationSuccess";
-import Dashboard from "./Dashboard/Dashboard";
+// App.jsx
+import {
+  createBrowserRouter,
+  RouterProvider,
+} from "react-router";
+
+import HeroSection from "./Components/HeroSection";
+import LoginPage from "./Components/LoginPage";
+import SignupLayout from "./Components/SignupComponents/SignupLayout";
+import SignupPage from "./Components/SignupComponents/SignupPage"
+import OTPAuthPage from "./Components/SignupComponents/OTPAuthPage";
+import VerificationSuccess from "./Components/SignupComponents/VerificationSuccess";
+import DashboardLayout from "./Components/Dashboard/DashboardLayout";
+import GetEmployees from "./Components/Dashboard/GetInfo/GetEmployees";
+import AddEmployeeForm from "./Components/Dashboard/GetInfo/AddEmployeeForm"
 import EditProfilePage from "./Components/EditProfilePage";
 import UserProfileView from "./Components/UserProfileView";
-import GetEmployees from "./GetInfo/GetEmployees";
+import EmployeeLayout from "./Components/Dashboard/GetInfo/EmployeeLayout";
 
-import { BrowserRouter, Routes, Route } from 'react-router';
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <HeroSection />,
+  },
+  {
+    path: "/signup",
+    element: <SignupLayout />,
+    children: [
+      {
+        path: "",
+        element: <SignupPage/>,
+      },
+      {
+        path: "otp", 
+        element: <OTPAuthPage />,
+      },
+      {
+        path: "success",
+        element: <VerificationSuccess />,
+      },
+    ],
+  },
+  {
+    path: "/login",
+    element: <LoginPage />,
+  },
+  {
+    path: "/user/:user_id",
+    element: <UserProfileView />,
+  },
+  {
+    path: "/edit/:user_id",
+    element: <EditProfilePage />,
+  },
+  {
+    path: "/dashboard",
+    element: <DashboardLayout />,
+    children: [
+      {
+        path: "employees",
+        element: <EmployeeLayout />,
+        children: [
+          {
+            path: "",
+            element: <GetEmployees/>
+          },
+          {
+            path: "add",
+            element: <AddEmployeeForm/>
+          }
+        ]
+      },
+    ],
+  },
+]);
 
-function App() {
-  return (
-    <BrowserRouter>
-      <Routes>
-
-      <Route path="/signup" element={<SignupPage />} />
-      <Route path="/signup/otp" element={<OTPAuthPage />} />
-      <Route path="/signup/success" element={<VerificationSuccess />} />
-      
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/user/:user_id" element={<UserProfileView />} />
-      <Route path="/edit/:user_id"element={<EditProfilePage />} /> 
-
-      <Route path="/" element={<HeroSection />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/dashboard/employees" element={<GetEmployees />} />
-      
-      </Routes>
-    </BrowserRouter>
-  )
+export default function App() {
+  return <RouterProvider router={router} />;
 }
-
-export default App

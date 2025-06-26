@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import axios from 'axios';
-import authstore from '../store/authstore';
+import authstore from '../../store/authstore';
 
 export default function OTPAuthPage() {
     const navigate = useNavigate();
