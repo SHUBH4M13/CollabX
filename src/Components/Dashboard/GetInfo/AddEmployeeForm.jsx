@@ -148,7 +148,6 @@ const AddEmployeeForm = () => {
                 </div>
               </div>
               
-              {/* Status Section */}
               <div className="mt-8 pt-8 border-t border-neutral-700">
                 <h4 className="text-lg font-medium mb-4 text-white">Employee Status</h4>
                 <label className="flex items-center space-x-3 cursor-pointer group p-4 rounded-xl hover:bg-neutral-900 transition-all duration-200">
