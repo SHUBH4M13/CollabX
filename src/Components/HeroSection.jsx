@@ -11,11 +11,10 @@ export default function HeroSection() {
             <Navbar />
             <div className="px-4 py-10 md:py-20">
                 <h1 className="relative z-10 mx-auto max-w-4xl text-center text-2xl font-bold md:text-4xl lg:text-7xl animate-fade-in">
-                    Lorem ipsum dolor sit amet 
+                Your Team. Plan Smart. Work Together.
                 </h1>
                 <p className="relative z-10 mx-auto max-w-xl py-4 text-center text-lg font-normal text-neutral-400 animate-fade-in-delay">
-                   Lorem ipsum, dolor sit amet consectetur adipisicing elit. Eaque nostrum ipsum minus explicabo aliquid.
-                </p>
+                A modern collaboration hub - streamline communication, manage projects, and track tasks in one powerful platform. Built for productivity, designed for teams                </p>
                 <div className="relative z-10 mt-8 flex flex-wrap items-center justify-center gap-4 animate-fade-in-delay-2">
 
                     <button 

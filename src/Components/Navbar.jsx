@@ -5,7 +5,7 @@ const Navbar = () => {
     return (
       <nav className="flex w-full items-center justify-between border-t border-b border-neutral-800 px-4 py-4">
         <div className="flex items-center gap-2">
-          <h1 className="text-base font-bold md:text-2xl font-Geist text-white">CollabX</h1>
+          <h1 className="text-base font-bold md:text-2xl font-Geist text-white">Henosis</h1>
         </div>
         <button 
         onClick={() => { navigate("/login")}}

@@ -11,11 +11,13 @@ import SignupPage from "./Components/SignupComponents/SignupPage"
 import OTPAuthPage from "./Components/SignupComponents/OTPAuthPage";
 import VerificationSuccess from "./Components/SignupComponents/VerificationSuccess";
 import DashboardLayout from "./Components/Dashboard/DashboardLayout";
-import GetEmployees from "./Components/Dashboard/GetInfo/GetEmployees";
-import AddEmployeeForm from "./Components/Dashboard/GetInfo/AddEmployeeForm"
+import GetEmployees from "./Components/Dashboard/EmployeeSection/GetEmployees";
+import AddEmployeeForm from "./Components/Dashboard/EmployeeSection/AddEmployeeForm"
 import EditProfilePage from "./Components/EditProfilePage";
 import UserProfileView from "./Components/UserProfileView";
-import EmployeeLayout from "./Components/Dashboard/GetInfo/EmployeeLayout";
+import EmployeeLayout from "./Components/Dashboard/EmployeeSection/EmployeeLayout";
+import ProjectLayout from "./Components/Dashboard/ProjectSection.jsx/ProjectLayout";
+import KanbanBoard from "./Components/Dashboard/ProjectSection.jsx/KanbanBoard"
 
 const router = createBrowserRouter([
   {
@@ -70,6 +72,32 @@ const router = createBrowserRouter([
           }
         ]
       },
+      {
+        path: "project",
+        element: <ProjectLayout/>,
+        children: [
+          {
+            path: "",
+           
+          },
+          {
+            path: ":projectname",
+            children: [
+              {
+                path: "info",
+              },
+              {
+                path: "teams",
+
+              },
+              {
+                path: "board",
+                element: <KanbanBoard/>
+              }
+            ]
+          },
+        ]
+      }
     ],
   },
 ]);

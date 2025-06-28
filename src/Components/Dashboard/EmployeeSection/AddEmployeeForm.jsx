@@ -103,7 +103,6 @@ const AddEmployeeForm = () => {
   return (
     <div className="min-h-screen bg-background text-white">
 
-      {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-white mb-2">Add New Employee</h2>
@@ -111,7 +110,6 @@ const AddEmployeeForm = () => {
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-12">
-          {/* Left Column - Profile Picture */}
           <div className="xl:col-span-1">
             <div className="bg-neutral-900 rounded-2xl p-8 h-fit sticky top-8">
               <h3 className="text-xl font-semibold mb-6 text-white">Profile Information</h3>
@@ -229,7 +227,7 @@ const AddEmployeeForm = () => {
                     value={formData.phoneNo}
                     onChange={handleInputChange}
                     className="w-full px-5 py-4 bg-neutral-900 border border-neutral-600 rounded-xl text-white placeholder-neutral-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all duration-300"
-                    placeholder="+1 (555) 000-0000"
+                    placeholder="+91"
                   />
                 </div>
 

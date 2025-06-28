@@ -2,6 +2,8 @@
 import { Command } from "lucide-react"
 import { useNavigate } from "react-router"
 import { useState } from "react";
+import AddSectionHeader from "./AddSectionHeader";
+import AddSectionItem from "./AddSectionItem";
 
 const sidebarData = {
   user: {
@@ -35,35 +37,31 @@ export default function AppSidebar({ isCollapsed = false }) {
       </div>
 
       {!isCollapsed && (
-        <div className="flex-1 px-4 space-y-6 animate-fadeIn overflow-y-auto" style={{ animationDelay: '0.6s', animationFillMode: 'both' }}>
+        <div className="flex-1 px-4 space-y-3 animate-fadeIn overflow-y-auto" style={{ animationDelay: '0.6s', animationFillMode: 'both' }}>
+          
+        <>
+        <AddSectionHeader SectionHeader="Manage" />
+        <AddSectionItem 
+        onClick={ () => { navigate("employees")}}
+        itemName={"Employees"} />
+        <AddSectionItem 
+        onClick={ () => { navigate("employees/add")}}
+        itemName={"Add New Employee"} />
+        </>    
 
-          <div className="space-y-1">
-            <div className="px-3 py-2">
-              <h3 className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Manage</h3>
-              <ul className="mt-3 ml-3">
+        <>
+        <AddSectionHeader SectionHeader="PrepX" />
+        <AddSectionItem 
+        onClick={ () => { navigate("project/PrepX/info")}}
+        itemName={"PrepX Info"} />
+        <AddSectionItem 
+        onClick={ () => { navigate("project/PrepX/teams")}}
+        itemName={"PrepX Team"} />
+        <AddSectionItem 
+        onClick={ () => { navigate("project/PrepX/board")}}
+        itemName={"PrepX Board"} />
+        </>  
 
-                <div>
-                  <button 
-                  onClick={ () =>
-                  {navigate("/dashboard/employees")}}
-                  className= {` cursor-pointer w-full pl-3 rounded-md hover:bg-primary/85 active:bg-primary/85 h-[30px] text-xs font-medium text-neutral-100 uppercase ${isActive ? 'bg-primary' : '' }`  }>
-                    Employees
-                  </button>
-                </div>
-                
-                <div>
-                  <button 
-                  onClick={ () =>
-                  {navigate("/dashboard/employees/add")}}
-                  className= {` cursor-pointer w-full pl-3 rounded-md hover:bg-primary/85 active:bg-primary/85 h-[30px] text-xs font-medium text-neutral-100 uppercase ${isActive ? 'bg-primary' : '' }`  }>
-                    Add new Employee
-                  </button>
-                </div>
-                
-
-              </ul>
-            </div>
-          </div>
 
           <div className="animate-fadeIn" style={{ animationDelay: '0.9s', animationFillMode: 'both' }}>
             <div className="flex items-center gap-3 p-3 border-t border-neutral-800">
