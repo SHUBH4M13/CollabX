@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Calendar, User, Flag, MoreHorizontal, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { Plus, Calendar, User, MoreHorizontal, Clock, CheckCircle, AlertCircle, ArrowRight, RotateCcw, Check } from 'lucide-react';
 
 const KanbanBoard = () => {
   const [tasks, setTasks] = useState({
@@ -76,6 +76,7 @@ const KanbanBoard = () => {
 
   const [draggedTask, setDraggedTask] = useState(null);
   const [showAddTask, setShowAddTask] = useState(null);
+  const [showStatusMenu, setShowStatusMenu] = useState(null);
   const [newTask, setNewTask] = useState({
     title: '',
     description: '',
@@ -85,7 +86,7 @@ const KanbanBoard = () => {
     tags: []
   });
 
-  const columns = [
+  const sections = [
     {
       id: 'todo',
       title: 'To Do',
@@ -112,8 +113,8 @@ const KanbanBoard = () => {
     }
   ];
 
-  const handleDragStart = (e, task, columnId) => {
-    setDraggedTask({ task, sourceColumn: columnId });
+  const handleDragStart = (e, task, sourceStatus) => {
+    setDraggedTask({ task, sourceStatus });
     e.dataTransfer.effectAllowed = 'move';
   };
 
@@ -122,29 +123,36 @@ const KanbanBoard = () => {
     e.dataTransfer.dropEffect = 'move';
   };
 
-  const handleDrop = (e, targetColumn) => {
+  const handleDrop = (e, targetStatus) => {
     e.preventDefault();
     
-    if (!draggedTask || draggedTask.sourceColumn === targetColumn) {
+    if (!draggedTask || draggedTask.sourceStatus === targetStatus) {
       setDraggedTask(null);
       return;
     }
 
-    const newTasks = { ...tasks };
-    
-    // Remove task from source column
-    newTasks[draggedTask.sourceColumn] = newTasks[draggedTask.sourceColumn].filter(
-      task => task.id !== draggedTask.task.id
-    );
-    
-    // Add task to target column
-    newTasks[targetColumn] = [...newTasks[targetColumn], draggedTask.task];
-    
-    setTasks(newTasks);
+    moveTask(draggedTask.task.id, draggedTask.sourceStatus, targetStatus);
     setDraggedTask(null);
   };
 
-  const addTask = (columnId) => {
+  const moveTask = (taskId, fromStatus, toStatus) => {
+    setTasks(prev => {
+      const newTasks = { ...prev };
+      
+      // Find and remove task from source status
+      const taskIndex = newTasks[fromStatus].findIndex(task => task.id === taskId);
+      if (taskIndex === -1) return prev;
+      
+      const [task] = newTasks[fromStatus].splice(taskIndex, 1);
+      
+      // Add task to target status
+      newTasks[toStatus] = [...newTasks[toStatus], task];
+      
+      return newTasks;
+    });
+  };
+
+  const addTask = (status) => {
     if (!newTask.title.trim()) return;
 
     const task = {
@@ -155,7 +163,7 @@ const KanbanBoard = () => {
 
     setTasks(prev => ({
       ...prev,
-      [columnId]: [...prev[columnId], task]
+      [status]: [...prev[status], task]
     }));
 
     setNewTask({
@@ -178,17 +186,73 @@ const KanbanBoard = () => {
     }
   };
 
-  const TaskCard = ({ task, columnId }) => (
+  const getStatusActions = (currentStatus) => {
+    const actions = [];
+    
+    if (currentStatus !== 'inprogress') {
+      actions.push({
+        id: 'inprogress',
+        label: 'Move to In Progress',
+        icon: <ArrowRight className="w-4 h-4" />,
+        color: 'text-orange-400 hover:text-orange-300'
+      });
+    }
+    
+    if (currentStatus !== 'completed') {
+      actions.push({
+        id: 'completed',
+        label: 'Mark as Completed',
+        icon: <Check className="w-4 h-4" />,
+        color: 'text-green-400 hover:text-green-300'
+      });
+    }
+    
+    if (currentStatus !== 'todo') {
+      actions.push({
+        id: 'todo',
+        label: 'Move to To Do',
+        icon: <RotateCcw className="w-4 h-4" />,
+        color: 'text-blue-400 hover:text-blue-300'
+      });
+    }
+    
+    return actions;
+  };
+
+  const TaskCard = ({ task, currentStatus }) => (
     <div
       draggable
-      onDragStart={(e) => handleDragStart(e, task, columnId)}
+      onDragStart={(e) => handleDragStart(e, task, currentStatus)}
       className="bg-neutral-900/90 backdrop-blur-sm border border-neutral-800 rounded-xl p-5 cursor-move hover:border-orange-500/40 hover:shadow-lg hover:shadow-orange-500/10 transition-all duration-300 group transform hover:-translate-y-1"
     >
       <div className="flex items-start justify-between mb-4">
         <div className={`w-4 h-4 rounded-full ${getPriorityColor(task.priority)} flex-shrink-0 mt-1 shadow-lg`}></div>
-        <button className="opacity-0 group-hover:opacity-100 transition-opacity text-neutral-400 hover:text-white p-1 rounded-lg hover:bg-neutral-800">
-          <MoreHorizontal className="w-4 h-4" />
-        </button>
+        <div className="relative">
+          <button 
+            onClick={() => setShowStatusMenu(showStatusMenu === task.id ? null : task.id)}
+            className="opacity-0 group-hover:opacity-100 transition-opacity text-neutral-400 hover:text-white p-1 rounded-lg hover:bg-neutral-800"
+          >
+            <MoreHorizontal className="w-4 h-4" />
+          </button>
+          
+          {showStatusMenu === task.id && (
+            <div className="absolute right-0 top-8 z-50 bg-neutral-800 border border-neutral-700 rounded-lg shadow-xl p-2 w-48">
+              {getStatusActions(currentStatus).map((action) => (
+                <button
+                  key={action.id}
+                  onClick={() => {
+                    moveTask(task.id, currentStatus, action.id);
+                    setShowStatusMenu(null);
+                  }}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-neutral-700 transition-colors ${action.color} text-sm`}
+                >
+                  {action.icon}
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
       
       <h3 className="text-white font-semibold mb-3 line-clamp-2 text-lg">{task.title}</h3>
@@ -215,7 +279,7 @@ const KanbanBoard = () => {
     </div>
   );
 
-  const AddTaskForm = ({ columnId }) => (
+  const AddTaskForm = ({ status }) => (
     <div className="bg-neutral-900/80 backdrop-blur-sm border border-neutral-800 rounded-xl p-4 space-y-3">
       <input
         type="text"
@@ -261,7 +325,7 @@ const KanbanBoard = () => {
       
       <div className="flex gap-2">
         <button
-          onClick={() => addTask(columnId)}
+          onClick={() => addTask(status)}
           className="flex-1 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
         >
           Add Task
@@ -276,50 +340,52 @@ const KanbanBoard = () => {
     </div>
   );
 
+  // Close status menu when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = () => setShowStatusMenu(null);
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
+
   return (
-    <div className="min-h-screen bg-black text-white p-6">
+    <div className="min-h-screen bg-black text-white p-6" onClick={() => setShowStatusMenu(null)}>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold mb-2">
             <span className="bg-gradient-to-r from-white via-neutral-200 to-neutral-400 bg-clip-text text-transparent">
-              Project Kanban Board
+              Task Management Board
             </span>
           </h1>
-          <p className="text-neutral-400">Manage your tasks with drag-and-drop simplicity</p>
+          <p className="text-neutral-400">Manage your tasks with drag-and-drop or quick status switching</p>
         </div>
 
-        {/* Kanban Board */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 overflow-x-auto">
-          <div className="md:hidden flex gap-4 pb-4">
-            {/* Mobile horizontal scroll hint */}
-            <div className="text-sm text-neutral-400 whitespace-nowrap">← Swipe to see all columns →</div>
-          </div>
-        </div>
-        
-        {/* Desktop/Tablet Column Layout */}
-        <div className="hidden md:grid md:grid-cols-3 gap-6">
-          {columns.map((column) => (
+        {/* Task Board */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {sections.map((section) => (
             <div
-              key={column.id}
+              key={section.id}
               onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, column.id)}
-              className="bg-neutral-900/30 backdrop-blur-sm border border-neutral-800 rounded-xl p-4 min-h-[600px] w-full"
+              onDrop={(e) => handleDrop(e, section.id)}
+              className="bg-neutral-900/30 backdrop-blur-sm border border-neutral-800 rounded-xl p-4 min-h-[600px]"
             >
-              {/* Column Header */}
+              {/* Section Header */}
               <div className="flex items-center justify-between mb-6 pb-4 border-b border-neutral-800">
                 <div className="flex items-center gap-3">
-                  <div className={`p-3 rounded-xl ${column.bgColor} ${column.color} border ${column.borderColor}`}>
-                    {column.icon}
+                  <div className={`p-3 rounded-xl ${section.bgColor} ${section.color} border ${section.borderColor}`}>
+                    {section.icon}
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-white">{column.title}</h2>
-                    <span className="text-sm text-neutral-400">{tasks[column.id].length} {tasks[column.id].length === 1 ? 'task' : 'tasks'}</span>
+                    <h2 className="text-xl font-bold text-white">{section.title}</h2>
+                    <span className="text-sm text-neutral-400">{tasks[section.id].length} {tasks[section.id].length === 1 ? 'task' : 'tasks'}</span>
                   </div>
                 </div>
                 
                 <button
-                  onClick={() => setShowAddTask(column.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowAddTask(section.id);
+                  }}
                   className="p-3 text-neutral-400 hover:text-white hover:bg-orange-500/20 hover:border-orange-500/30 border border-neutral-700 rounded-xl transition-all duration-300 group"
                   title="Add new task"
                 >
@@ -329,89 +395,32 @@ const KanbanBoard = () => {
 
               {/* Tasks */}
               <div className="space-y-4 max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-neutral-700 scrollbar-track-transparent">
-                {tasks[column.id].map((task) => (
-                  <TaskCard key={task.id} task={task} columnId={column.id} />
+                {tasks[section.id].map((task) => (
+                  <div key={task.id} onClick={(e) => e.stopPropagation()}>
+                    <TaskCard task={task} currentStatus={section.id} />
+                  </div>
                 ))}
                 
                 {/* Add Task Form */}
-                {showAddTask === column.id && (
-                  <AddTaskForm columnId={column.id} />
+                {showAddTask === section.id && (
+                  <AddTaskForm status={section.id} />
                 )}
               </div>
 
-              {/* Drop Zone Indicator */}
-              {tasks[column.id].length === 0 && showAddTask !== column.id && (
+              {/* Empty State */}
+              {tasks[section.id].length === 0 && showAddTask !== section.id && (
                 <div className="flex items-center justify-center h-48 border-2 border-dashed border-neutral-700 rounded-xl text-neutral-500 hover:border-neutral-600 hover:bg-neutral-800/30 transition-all duration-300">
                   <div className="text-center">
-                    <div className={`mx-auto mb-3 p-3 rounded-full ${column.bgColor} ${column.color}`}>
-                      {column.icon}
+                    <div className={`mx-auto mb-3 p-3 rounded-full ${section.bgColor} ${section.color}`}>
+                      {section.icon}
                     </div>
-                    <p className="text-sm font-medium">Drop tasks here</p>
-                    <p className="text-xs text-neutral-600 mt-1">or click + to add new</p>
+                    <p className="text-sm font-medium">No tasks yet</p>
+                    <p className="text-xs text-neutral-600 mt-1">Add your first task or drag one here</p>
                   </div>
                 </div>
               )}
             </div>
           ))}
-        </div>
-
-        {/* Mobile Stacked Layout */}
-        <div className="md:hidden space-y-6">
-          {columns.map((column) => (
-            <div
-              key={column.id}
-              onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, column.id)}
-              className="bg-neutral-900/30 backdrop-blur-sm border border-neutral-800 rounded-xl p-4 w-full"
-            >
-              {/* Column Header */}
-              <div className="flex items-center justify-between mb-6 pb-4 border-b border-neutral-800">
-                <div className="flex items-center gap-3">
-                  <div className={`p-3 rounded-xl ${column.bgColor} ${column.color} border ${column.borderColor}`}>
-                    {column.icon}
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-white">{column.title}</h2>
-                    <span className="text-sm text-neutral-400">{tasks[column.id].length} {tasks[column.id].length === 1 ? 'task' : 'tasks'}</span>
-                  </div>
-                </div>
-                
-                <button
-                  onClick={() => setShowAddTask(column.id)}
-                  className="p-3 text-neutral-400 hover:text-white hover:bg-orange-500/20 hover:border-orange-500/30 border border-neutral-700 rounded-xl transition-all duration-300 group"
-                  title="Add new task"
-                >
-                  <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
-                </button>
-              </div>
-
-              {/* Tasks */}
-              <div className="space-y-4 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-neutral-700 scrollbar-track-transparent">
-                {tasks[column.id].map((task) => (
-                  <TaskCard key={task.id} task={task} columnId={column.id} />
-                ))}
-                
-                {/* Add Task Form */}
-                {showAddTask === column.id && (
-                  <AddTaskForm columnId={column.id} />
-                )}
-              </div>
-
-              {/* Drop Zone Indicator */}
-              {tasks[column.id].length === 0 && showAddTask !== column.id && (
-                <div className="flex items-center justify-center h-32 border-2 border-dashed border-neutral-700 rounded-xl text-neutral-500 hover:border-neutral-600 hover:bg-neutral-800/30 transition-all duration-300">
-                  <div className="text-center">
-                    <div className={`mx-auto mb-3 p-3 rounded-full ${column.bgColor} ${column.color}`}>
-                      {column.icon}
-                    </div>
-                    <p className="text-sm font-medium">Drop tasks here</p>
-                    <p className="text-xs text-neutral-600 mt-1">or click + to add new</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
         </div>
 
         {/* Stats Footer */}
@@ -439,6 +448,7 @@ const KanbanBoard = () => {
           </div>
         </div>
       </div>
+    </div>
   );
 };
 

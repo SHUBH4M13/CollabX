@@ -1,7 +1,8 @@
 // AppSidebar.jsx
 import { Command } from "lucide-react"
+import axios from "axios";
 import { useNavigate } from "react-router"
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AddSectionHeader from "./AddSectionHeader";
 import AddSectionItem from "./AddSectionItem";
 
@@ -17,12 +18,31 @@ const sidebarData = {
 export default function AppSidebar({ isCollapsed = false }) {
   const navigate = useNavigate();
   const user_id = localStorage.getItem("_id");
-  const [isActive , setisActive ] = useState(false);
+  const [isActive, setisActive] = useState(false);
+  const [Roles , setRoles] = useState("");
+  const [Project , setProject] = useState("");
+
+  useEffect(() => {
+    try {
+      const response = axios.get("http://localhost:8000/dashboard" , {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`
+        }
+      });
+      console.log(response.data);
+      // // const { roles, projects } = response.data 
+      // setRoles[roles];
+      // setProject[projects];
+    } catch (error) {
+      console.log("error" , error);
+    }
+  } , [])
+
+  console.log(Roles );
+  console.log(Project)
 
   return (
     <div className={`${isCollapsed ? 'w-16' : 'w-64'} min-h-screen bg-neutral-950 border-r border-neutral-800 flex flex-col transition-all duration-300 animate-fadeIn`}>
-
-      {/* Header */}
       <div className="p-4 animate-fadeIn" style={{ animationDelay: '0.3s', animationFillMode: 'both' }}>
         <a
           href="/dashboard"
@@ -38,29 +58,32 @@ export default function AppSidebar({ isCollapsed = false }) {
 
       {!isCollapsed && (
         <div className="flex-1 px-4 space-y-3 animate-fadeIn overflow-y-auto" style={{ animationDelay: '0.6s', animationFillMode: 'both' }}>
-          
-        <>
-        <AddSectionHeader SectionHeader="Manage" />
-        <AddSectionItem 
-        onClick={ () => { navigate("employees")}}
-        itemName={"Employees"} />
-        <AddSectionItem 
-        onClick={ () => { navigate("employees/add")}}
-        itemName={"Add New Employee"} />
-        </>    
 
-        <>
-        <AddSectionHeader SectionHeader="PrepX" />
-        <AddSectionItem 
-        onClick={ () => { navigate("project/PrepX/info")}}
-        itemName={"PrepX Info"} />
-        <AddSectionItem 
-        onClick={ () => { navigate("project/PrepX/teams")}}
-        itemName={"PrepX Team"} />
-        <AddSectionItem 
-        onClick={ () => { navigate("project/PrepX/board")}}
-        itemName={"PrepX Board"} />
-        </>  
+          <>
+            <div  className="  cursor-pointer hover:text-white duration-300 " onClick={ () => { navigate("/addproject") } }>
+            <AddSectionHeader SectionHeader="Add New Project" />
+            </div>
+            <AddSectionHeader SectionHeader="Manage" />
+            <AddSectionItem
+              onClick={() => { navigate("employees") }}
+              itemName={"Employees"} />
+            <AddSectionItem
+              onClick={() => { navigate("employees/add") }}
+              itemName={"Add New Employee"} />
+          </>
+
+          <>
+            <AddSectionHeader SectionHeader="PrepX" />
+            <AddSectionItem
+              onClick={() => { navigate("project/PrepX/info") }}
+              itemName={"PrepX Info"} />
+            <AddSectionItem
+              onClick={() => { navigate("project/PrepX/teams") }}
+              itemName={"PrepX Team"} />
+            <AddSectionItem
+              onClick={() => { navigate("project/PrepX/board") }}
+              itemName={"PrepX Board"} />
+          </>
 
 
           <div className="animate-fadeIn" style={{ animationDelay: '0.9s', animationFillMode: 'both' }}>

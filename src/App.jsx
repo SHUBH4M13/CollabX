@@ -18,6 +18,7 @@ import UserProfileView from "./Components/UserProfileView";
 import EmployeeLayout from "./Components/Dashboard/EmployeeSection/EmployeeLayout";
 import ProjectLayout from "./Components/Dashboard/ProjectSection.jsx/ProjectLayout";
 import KanbanBoard from "./Components/Dashboard/ProjectSection.jsx/KanbanBoard"
+import CreateProjectPage from "./Components/Dashboard/ProjectSection.jsx/CreateProjectPage";
 
 const router = createBrowserRouter([
   {
@@ -45,6 +46,10 @@ const router = createBrowserRouter([
   {
     path: "/login",
     element: <LoginPage />,
+  },
+  {
+    path: "/addproject",
+    element: <CreateProjectPage/>
   },
   {
     path: "/user/:user_id",
@@ -77,10 +82,6 @@ const router = createBrowserRouter([
         element: <ProjectLayout/>,
         children: [
           {
-            path: "",
-           
-          },
-          {
             path: ":projectname",
             children: [
               {
@@ -97,7 +98,7 @@ const router = createBrowserRouter([
             ]
           },
         ]
-      }
+      },
     ],
   },
 ]);
