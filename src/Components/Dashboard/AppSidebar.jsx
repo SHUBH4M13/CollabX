@@ -1,10 +1,8 @@
-// AppSidebar.jsx
-import { Command } from "lucide-react"
-import axios from "axios";
 import { useNavigate } from "react-router"
-import { useEffect, useState } from "react";
 import AddSectionHeader from "./AddSectionHeader";
 import AddSectionItem from "./AddSectionItem";
+import { useEffect } from "react";
+import axios from "axios";
 
 const sidebarData = {
   user: {
@@ -14,33 +12,9 @@ const sidebarData = {
   },
 }
 
-
 export default function AppSidebar({ isCollapsed = false }) {
   const navigate = useNavigate();
-  const user_id = localStorage.getItem("_id");
-  const [isActive, setisActive] = useState(false);
-  const [Roles , setRoles] = useState("");
-  const [Project , setProject] = useState("");
-
-  useEffect(() => {
-    try {
-      const response = axios.get("http://localhost:8000/dashboard" , {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`
-        }
-      });
-      console.log(response.data);
-      // // const { roles, projects } = response.data 
-      // setRoles[roles];
-      // setProject[projects];
-    } catch (error) {
-      console.log("error" , error);
-    }
-  } , [])
-
-  console.log(Roles );
-  console.log(Project)
-
+  
   return (
     <div className={`${isCollapsed ? 'w-16' : 'w-64'} min-h-screen bg-neutral-950 border-r border-neutral-800 flex flex-col transition-all duration-300 animate-fadeIn`}>
       <div className="p-4 animate-fadeIn" style={{ animationDelay: '0.3s', animationFillMode: 'both' }}>

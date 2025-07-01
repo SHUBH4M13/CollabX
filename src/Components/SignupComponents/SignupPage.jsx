@@ -48,7 +48,6 @@ export default function SignupPage() {
     return (
         <div className="relative flex items-center justify-center min-h-screen bg-black text-white">
             <div className="absolute inset-0 bg-gradient-to-br from-neutral-900 via-black to-neutral-900"></div>
-            <Outlet/>
             <div className="relative z-10 w-full max-w-md mx-4">
                 <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-8 shadow-2xl animate-fade-in">
                     <div className="text-center mb-8">
@@ -154,7 +153,7 @@ export default function SignupPage() {
 
                         <button
                             onClick={handleSubmit}
-                            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-3 px-4 rounded-lg transition-all duration-300 hover:-translate-y-0.5 shadow-lg"
+                            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-3 px-4 rounded-lg transition-all duration-300 hover:-translate-y-0.5 cursor-pointer shadow-lg"
                         >
                             Create Account
                         </button>

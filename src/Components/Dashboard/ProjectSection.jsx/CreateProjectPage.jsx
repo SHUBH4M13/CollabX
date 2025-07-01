@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus, Users, User, FileText, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router";
+import axios from "axios";
 
 export default function CreateProjectPage() {
   const navigate = useNavigate();
@@ -12,17 +13,13 @@ export default function CreateProjectPage() {
     projectTeam: []
   });
 
-  const [employees, setEmployees] = useState([
-    { _id: "1", name: "John Doe", role: "Senior Developer" },
-    { _id: "2", name: "Jane Smith", role: "UI/UX Designer" },
-    { _id: "3", name: "Mike Johnson", role: "Project Manager" },
-    { _id: "4", name: "Sarah Wilson", role: "Backend Developer" },
-    { _id: "5", name: "Tom Brown", role: "Frontend Developer" }
-  ]);
-
+  const [managers, setManagers] = useState([]);
+  const [employees, setEmployees] = useState([]);
   const [showManagerDropdown, setShowManagerDropdown] = useState(false);
   const [showTeamDropdown, setShowTeamDropdown] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -50,32 +47,114 @@ export default function CreateProjectPage() {
     }));
   };
 
+  const GetManagers = async () => {
+    try {
+      const res = await axios.get("http://localhost:8000/project/managers", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`
+        }
+      });
+      console.log("Managers API Response:", res.data);
+      setManagers(Array.isArray(res.data) ? res.data : []);
+    } catch (error) {
+      console.error("Error fetching managers:", error);
+      setError("Failed to fetch managers");
+      setManagers([]);
+    }
+  };
+
+  const GetEmployees = async () => {
+    try {
+      const res = await axios.get("http://localhost:8000/project/Employees", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`
+        }
+      });
+      console.log("Employees API Response:", res.data);
+      setEmployees(Array.isArray(res.data) ? res.data : []);
+    } catch (error) {
+      console.error("Error fetching employees:", error);
+      setError("Failed to fetch employees");
+      setEmployees([]);
+    }
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        await Promise.all([GetEmployees(), GetManagers()]);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      console.log("Project data:", formData);
-      alert("Project created successfully!");
-      // Reset form
-      setFormData({
-        projectName: "",
-        projectDesc: "",
-        projectManager: [],
-        projectTeam: []
-      });
+      const res = await axios.post(
+        "http://localhost:8000/project/create",
+        formData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+          }
+        }
+      );
+
+      if (res.status === 201) {
+        console.log("Project created successfully");
+        navigate(-1);
+      }
     } catch (err) {
-      console.error("Error creating project:", err);
+      console.error("Error creating project:", err.response?.data || err.message);
+      setError("Failed to create project");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const getEmployeeName = (id) => {
+    const manager = managers.find((m) => m._id === id);
+    if (manager) {
+      return `${manager.firstName} ${manager.lastName}`;
+    }
+    
     const emp = employees.find((e) => e._id === id);
-    return emp?.name || "";
+    if (emp) {
+      return `${emp.firstName} ${emp.lastName}`;
+    }
+    
+    return "Unknown User";
   };
+
+  // Close dropdowns when clicking outside
+  const handleDropdownToggle = (dropdownType) => {
+    if (dropdownType === 'manager') {
+      setShowManagerDropdown(!showManagerDropdown);
+      setShowTeamDropdown(false);
+    } else {
+      setShowTeamDropdown(!showTeamDropdown);
+      setShowManagerDropdown(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="flex items-center gap-3">
+          <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+          <span>Loading...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -97,6 +176,12 @@ export default function CreateProjectPage() {
           </p>
         </div>
 
+        {error && (
+          <div className="mx-auto max-w-4xl mb-6 p-4 bg-red-900/20 border border-red-500 rounded-lg text-red-300">
+            {error}
+          </div>
+        )}
+
         <form
           onSubmit={handleSubmit}
           className="flex justify-center items-center"
@@ -116,7 +201,7 @@ export default function CreateProjectPage() {
                   onChange={handleInputChange}
                   placeholder="Enter project name..."
                   required
-                  className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-3 mt-2"
+                  className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-3 mt-2 text-white placeholder-neutral-400 focus:border-orange-500 focus:outline-none"
                 />
               </div>
 
@@ -132,7 +217,7 @@ export default function CreateProjectPage() {
                   onChange={handleInputChange}
                   placeholder="Describe your project..."
                   rows={4}
-                  className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-3 mt-2"
+                  className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-3 mt-2 text-white placeholder-neutral-400 focus:border-orange-500 focus:outline-none resize-none"
                 />
               </div>
 
@@ -145,40 +230,48 @@ export default function CreateProjectPage() {
                 <div className="relative mt-2">
                   <button
                     type="button"
-                    onClick={() => setShowManagerDropdown(!showManagerDropdown)}
-                    className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-3 text-left flex justify-between"
+                    onClick={() => handleDropdownToggle('manager')}
+                    className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-3 text-left flex justify-between items-center hover:border-neutral-600 focus:border-orange-500 focus:outline-none"
                   >
-                    <span className="text-neutral-400">
+                    <span className={formData.projectManager.length > 0 ? "text-white" : "text-neutral-400"}>
                       {formData.projectManager.length > 0
                         ? `${formData.projectManager.length} manager(s) selected`
                         : "Select project managers..."}
                     </span>
                     <Plus
                       size={20}
-                      className={`transition-transform ${
+                      className={`transition-transform text-neutral-400 ${
                         showManagerDropdown ? "rotate-45" : ""
                       }`}
                     />
                   </button>
                   {showManagerDropdown && (
                     <div className="absolute mt-2 w-full bg-neutral-800 border border-neutral-700 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
-                      {employees.map((emp) => (
-                        <div
-                          key={emp._id}
-                          onClick={() => toggleManager(emp._id)}
-                          className="px-4 py-2 hover:bg-neutral-700 flex justify-between cursor-pointer"
-                        >
-                          <div>
-                            <div>{emp.name}</div>
-                            <div className="text-sm text-neutral-400">
-                              {emp.role}
+                      {managers.length > 0 ? (
+                        managers.map((manager) => (
+                          <div
+                            key={manager._id}
+                            onClick={() => toggleManager(manager._id)}
+                            className="px-4 py-3 hover:bg-neutral-700 flex justify-between items-center cursor-pointer transition-colors"
+                          >
+                            <div>
+                              <div className="text-white">
+                                {`${manager.firstName} ${manager.lastName}`}
+                              </div>
+                              <div className="text-sm text-neutral-400">
+                                {manager.roles && manager.roles.length > 0 ? manager.roles.join(', ') : 'Manager'}
+                              </div>
                             </div>
+                            {formData.projectManager.includes(manager._id) && (
+                              <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+                            )}
                           </div>
-                          {formData.projectManager.includes(emp._id) && (
-                            <div className="w-3 h-3 rounded-full bg-orange-500"></div>
-                          )}
+                        ))
+                      ) : (
+                        <div className="px-4 py-3 text-neutral-400">
+                          {loading ? "Loading managers..." : "No managers available"}
                         </div>
-                      ))}
+                      )}
                     </div>
                   )}
                 </div>
@@ -186,7 +279,7 @@ export default function CreateProjectPage() {
 
               {/* Selected Managers */}
               {formData.projectManager.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
+                <div className="flex flex-wrap gap-2">
                   {formData.projectManager.map((id) => (
                     <span
                       key={id}
@@ -196,6 +289,7 @@ export default function CreateProjectPage() {
                       <button
                         type="button"
                         onClick={() => toggleManager(id)}
+                        className="hover:text-orange-100 transition-colors"
                       >
                         ×
                       </button>
@@ -213,40 +307,44 @@ export default function CreateProjectPage() {
                 <div className="relative mt-2">
                   <button
                     type="button"
-                    onClick={() => setShowTeamDropdown(!showTeamDropdown)}
-                    className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-3 text-left flex justify-between"
+                    onClick={() => handleDropdownToggle('team')}
+                    className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-3 text-left flex justify-between items-center hover:border-neutral-600 focus:border-orange-500 focus:outline-none"
                   >
-                    <span className="text-neutral-400">
+                    <span className={formData.projectTeam.length > 0 ? "text-white" : "text-neutral-400"}>
                       {formData.projectTeam.length > 0
                         ? `${formData.projectTeam.length} team member(s) selected`
                         : "Select team members..."}
                     </span>
                     <Plus
                       size={20}
-                      className={`transition-transform ${
+                      className={`transition-transform text-neutral-400 ${
                         showTeamDropdown ? "rotate-45" : ""
                       }`}
                     />
                   </button>
                   {showTeamDropdown && (
                     <div className="absolute mt-2 w-full bg-neutral-800 border border-neutral-700 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
-                      {employees.map((emp) => (
-                        <div
-                          key={emp._id}
-                          onClick={() => toggleTeamMember(emp._id)}
-                          className="px-4 py-2 hover:bg-neutral-700 flex justify-between cursor-pointer"
-                        >
-                          <div>
-                            <div>{emp.name}</div>
-                            <div className="text-sm text-neutral-400">
-                              {emp.role}
+                      {employees.length > 0 ? (
+                        employees.map((emp) => (
+                          <div
+                            key={emp._id}
+                            onClick={() => toggleTeamMember(emp._id)}
+                            className="px-4 py-3 hover:bg-neutral-700 flex justify-between items-center cursor-pointer transition-colors"
+                          >
+                            <div>
+                              <div className="text-white">{`${emp.firstName} ${emp.lastName}`}</div>
+                              <div className="text-sm text-neutral-400">
+                                {emp.roles && emp.roles.length > 0 ? emp.roles.join(', ') : 'Employee'}
+                              </div>
                             </div>
+                            {formData.projectTeam.includes(emp._id) && (
+                              <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                            )}
                           </div>
-                          {formData.projectTeam.includes(emp._id) && (
-                            <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                          )}
-                        </div>
-                      ))}
+                        ))
+                      ) : (
+                        <div className="px-4 py-3 text-neutral-400">No employees available</div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -254,7 +352,7 @@ export default function CreateProjectPage() {
 
               {/* Selected Team */}
               {formData.projectTeam.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
+                <div className="flex flex-wrap gap-2">
                   {formData.projectTeam.map((id) => (
                     <span
                       key={id}
@@ -264,6 +362,7 @@ export default function CreateProjectPage() {
                       <button
                         type="button"
                         onClick={() => toggleTeamMember(id)}
+                        className="hover:text-blue-100 transition-colors"
                       >
                         ×
                       </button>
@@ -276,10 +375,8 @@ export default function CreateProjectPage() {
               <div className="flex justify-center pt-6">
                 <button
                   type="submit"
-                  disabled={
-                    isSubmitting || !formData.projectName.trim()
-                  }
-                  className="w-60 rounded-lg bg-orange-500 px-6 py-3 text-white font-medium hover:bg-orange-600 disabled:opacity-50 flex items-center justify-center gap-2"
+                  disabled={isSubmitting || !formData.projectName.trim()}
+                  className="w-60 rounded-lg bg-orange-500 px-6 py-3 text-white font-medium hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
                 >
                   {isSubmitting ? (
                     <>
