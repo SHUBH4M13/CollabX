@@ -1,20 +1,53 @@
 import { useNavigate } from "react-router"
 import AddSectionHeader from "./AddSectionHeader";
 import AddSectionItem from "./AddSectionItem";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import dashboardstore from "../../store/dashboardstore";
 import axios from "axios";
 
-const sidebarData = {
-  user: {
-    name: "Shubham Karna",
-    email: "svk13gaming@gmail.com",
-    avatar: "/placeholder.svg?height=32&width=32",
-  },
-}
-
 export default function AppSidebar({ isCollapsed = false }) {
+  const [isHr, setIsHr] = useState(false);
   const navigate = useNavigate();
-  
+  const { firstname, lastname, email, roles, projects, setUserData } = dashboardstore();
+
+  const checkIsHr = (userRoles) => {
+    if (userRoles && userRoles.includes("hr")) {
+      setIsHr(true);
+    } else {
+      setIsHr(false);
+    }
+  };
+
+  useEffect(() => {
+    const fetchInfo = async () => {
+      try {
+        const res = await axios.get("http://localhost:8000/dashboard/getinfo", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+
+        const userData = {
+          firstname: res.data.firstName,
+          lastname: res.data.lastName,
+          email: res.data.email,
+          roles: res.data.roles,
+          projects: res.data.projects,
+        };
+
+        setUserData(userData);
+        checkIsHr(res.data.roles);
+
+      } catch (error) {
+        console.log("error", error);
+      }
+    };
+    fetchInfo();
+  }, []);
+
+  const displayName = firstname && lastname ? `${firstname} ${lastname}` : "User";
+  const displayEmail = email || "No email";
+
   return (
     <div className={`${isCollapsed ? 'w-16' : 'w-64'} min-h-screen bg-neutral-950 border-r border-neutral-800 flex flex-col transition-all duration-300 animate-fadeIn`}>
       <div className="p-4 animate-fadeIn" style={{ animationDelay: '0.3s', animationFillMode: 'both' }}>
@@ -33,18 +66,25 @@ export default function AppSidebar({ isCollapsed = false }) {
       {!isCollapsed && (
         <div className="flex-1 px-4 space-y-3 animate-fadeIn overflow-y-auto" style={{ animationDelay: '0.6s', animationFillMode: 'both' }}>
 
-          <>
-            <div  className="  cursor-pointer hover:text-white duration-300 " onClick={ () => { navigate("/addproject") } }>
-            <AddSectionHeader SectionHeader="Add New Project" />
-            </div>
-            <AddSectionHeader SectionHeader="Manage" />
-            <AddSectionItem
-              onClick={() => { navigate("employees") }}
-              itemName={"Employees"} />
-            <AddSectionItem
-              onClick={() => { navigate("employees/add") }}
-              itemName={"Add New Employee"} />
-          </>
+          {isHr && (
+            <>
+              <div
+                className="cursor-pointer hover:text-white duration-300"
+                onClick={() => navigate("/addproject")}
+              >
+                <AddSectionHeader SectionHeader="Add New Project" />
+              </div>
+              <AddSectionHeader SectionHeader="Manage" />
+              <AddSectionItem
+                onClick={() => navigate("employees")}
+                itemName={"Employees"}
+              />
+              <AddSectionItem
+                onClick={() => navigate("employees/add")}
+                itemName={"Add New Employee"}
+              />
+            </>
+          )}
 
           <>
             <AddSectionHeader SectionHeader="PrepX" />
@@ -59,18 +99,19 @@ export default function AppSidebar({ isCollapsed = false }) {
               itemName={"PrepX Board"} />
           </>
 
-
           <div className="animate-fadeIn" style={{ animationDelay: '0.9s', animationFillMode: 'both' }}>
             <div className="flex items-center gap-3 p-3 border-t border-neutral-800">
               <div className="w-8 h-8 bg-neutral-700 rounded-full flex items-center justify-center">
-                <span className="text-xs text-neutral-400">S</span>
+                <span className="text-xs text-neutral-400">
+                  {firstname ? firstname.charAt(0).toUpperCase() : 'U'}
+                </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">{sidebarData.user.name}</p>
-                <p className="text-xs text-neutral-400 truncate">{sidebarData.user.email}</p>
+                <p className="text-sm font-medium text-white truncate">{displayName}</p>
+                <p className="text-xs text-neutral-400 truncate">{displayEmail}</p>
               </div>
               <button
-                onClick={() => navigate(`/edit/${user_id}`)}
+                onClick={() => navigate(`/edit/profile`)} // Fixed: removed undefined user_id
                 className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-neutral-700 transition-colors duration-200 group"
                 title="Profile Settings"
               >

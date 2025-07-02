@@ -19,6 +19,7 @@ import EmployeeLayout from "./Components/Dashboard/EmployeeSection/EmployeeLayou
 import ProjectLayout from "./Components/Dashboard/ProjectSection.jsx/ProjectLayout";
 import KanbanBoard from "./Components/Dashboard/ProjectSection.jsx/KanbanBoard"
 import CreateProjectPage from "./Components/Dashboard/ProjectSection.jsx/CreateProjectPage";
+import ChatLayout from "./Components/Dashboard/ChatLayout"
 
 const router = createBrowserRouter([
   {
@@ -63,6 +64,10 @@ const router = createBrowserRouter([
     path: "/dashboard",
     element: <DashboardLayout />,
     children: [
+      {
+        path: "",
+        element: <ChatLayout/>
+      },
       {
         path: "employees",
         element: <EmployeeLayout />,

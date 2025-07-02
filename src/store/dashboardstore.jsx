@@ -1,15 +1,14 @@
-// src/store/userStore.js
 import { create } from 'zustand';
 
 const dashboardstore = create((set) => ({
-  firsname: '',
+  firstname: '',
   lastname: '',
   email: '',
   roles: [],
   projects: [],
 
-  setUserData: ({ firsname , lastname , email, roles }) => set(() => ({
-    firsname,
+  setUserData: ({ firstname , lastname , email, roles , projects }) => set(() => ({
+    firstname,
     lastname,
     email,
     roles,
@@ -17,7 +16,7 @@ const dashboardstore = create((set) => ({
   })),
 
   clearUserData: () => set(() => ({
-    firsname: '',
+    firstname: '',
     lastname: '',
     email: '',
     roles: [],
